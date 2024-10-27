@@ -1,8 +1,6 @@
 package main
 
-
 import "net/http"
-
 
 func (app *application) routes() http.Handler {
 	mux := http.NewServeMux()
@@ -15,6 +13,6 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("/snippet/view", app.snippetView)
 	mux.HandleFunc("/snippet/create", app.snippetCreate)
 
-  // it will go through the secureHeaders middleware and add those OWASP secure headers
-  return secureHeaders(mux)
+	// it will go through the secureHeaders middleware and add those OWASP secure headers
+	return app.logRequest(secureHeaders(mux))
 }

@@ -1,6 +1,11 @@
 package main
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
+
+// middleware flow as of now : recoverPanic -> logRequest -> secureHeaders servmux -> application handler
 
 // for this application flow : secureHeaders -> servemux -> application handler
 func secureHeaders(next http.Handler) http.Handler {
@@ -16,3 +21,15 @@ func secureHeaders(next http.Handler) http.Handler {
 
 	})
 }
+
+// Log's all requests, application flow : logRequest -> secureHeaders servmux -> application handler
+
+func (app *application) logRequest(next http.Handler) http.Handler{
+  return http.HandlerFunc(func(w http.ResponseWriter,r *http.Request){
+
+  app.infoLog.Printf("%s - %s %s %s",r.RemoteAddr,r.Proto,r.Method,r.URL.RequestURI())
+
+    next.ServeHTTP(w,r)
+  })
+}
+
