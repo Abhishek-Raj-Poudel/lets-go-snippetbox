@@ -1,0 +1,43 @@
+# Binaries for programs and plugins
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Output of `go build`
+/bin/
+/obj/
+*.out
+
+# Vendor directory (if you're not using Go modules)
+/vendor/
+
+# Dependencies
+/go.sum
+
+# IDE/editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs and runtime files
+*.log
+*.tmp
+
+# Environment and configuration files
+.env
+.env.*
+
+# Testing-related files
+*.test
+*.coverprofile
+coverage.out
+test_results.xml
+
+# Go-specific files
+*.prof
+
+# Docker-related files (if applicable)
+docker-compose.yml
+Dockerfile

@@ -1,0 +1,24 @@
+{{define "title"}}Home{{end}}
+{{define "main"}}
+<h2>Latest Snipet</h2>
+
+{{if .Snippets}}
+<table>
+  <tr>
+    <th>Title</th>
+    <th>Created</th>
+    <th>ID</th>
+  </tr>
+
+  {{range .Snippets}}
+  <tr>
+    <td><a href="/snippet/view?id={{.ID}}">{{.Title}}</a></td>
+    <td>{{humanDate .Created_At}}</td>
+    <td>#{{.ID}}</td>
+  </tr>
+  {{end}}
+</table>
+{{else}}
+<p>There's nothing letft to do</p>
+{{end}}
+{{end}}
