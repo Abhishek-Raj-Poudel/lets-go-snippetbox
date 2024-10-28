@@ -50,7 +50,10 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Display the form for creating a new snippet..."))
+  data := app.newTemplateDate(r)
+
+  app.render(w, http.StatusOK,"create.tmpl.html",data)
+	// w.Write([]byte("Display the form for creating a new snippet..."))
 }
 
 func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
@@ -71,3 +74,4 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	http.Redirect(w, r, fmt.Sprintf("/snippets/view?%d", id), http.StatusSeeOther)
 
 }
+
