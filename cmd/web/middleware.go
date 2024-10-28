@@ -33,3 +33,23 @@ func (app *application) logRequest(next http.Handler) http.Handler{
   })
 }
 
+
+//Helps recover panic  
+
+func (app *application) recoverPanic(next http.Handler) http.Handler{
+  return http.HandlerFunc(func(w http.ResponseWriter,r *http.Request){
+
+    defer func(){
+      if err := recover(); err != nil{
+        //close connection
+        w.Header().Set("Connection","close")
+
+        //report an error
+        app.serverError( w,fmt.Errorf("%s",err) )
+
+      }
+    }()
+
+    next.ServeHTTP(w,r)
+  })
+}
