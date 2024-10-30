@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/go-playground/form"
 	"github.com/julienschmidt/httprouter"
 
 	"snippitbox.chronoabi.com/internal/models"
@@ -13,11 +14,10 @@ import (
 )
 
 type snippetCreateForm struct {
-	Title       string
-	Content     string
-	Expires     int
-	FieldErrors map[string]string
-	validator.Validator
+	Title               string `form:"title"`
+	Content             string `form:"title"`
+	Expires             int    `form:"title"`
+	validator.Validator `form:"-"`
 }
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -71,26 +71,32 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
 
-	err := r.ParseForm()
-
-	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
-		return
-	}
-	// so we first take the expires value
-	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
+	var form snippetCreateForm
+  err := app.decodePostForm(r,&form)
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
 
-	// then create a form variable which will be a snippetCreate structure
+	// err := r.ParseForm()
+	// if err != nil {
+	// 	app.clientError(w, http.StatusBadRequest)
+	// 	return
+	// }
 
-	form := snippetCreateForm{
-		Title:   r.PostForm.Get("title"),
-		Content: r.PostForm.Get("content"),
-		Expires: expires,
-	}
+	// expires, err := strconv.Atoi(r.PostForm.Get("expires"))
+	// if err != nil {
+	// 	app.clientError(w, http.StatusBadRequest)
+	// 	return
+	// }
+
+	// form := snippetCreateForm{
+	// 	Title:   r.PostForm.Get("title"),
+	// 	Content: r.PostForm.Get("content"),
+	// 	Expires: expires,
+	// }
+
+	//now we are just instantiating a form an parsing it's value automatically with the help of go-playground/fom
 
 
 	form.CheckField(validator.NotBlank(form.Title), "title", "This field cannot be blank")
@@ -114,5 +120,25 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	}
 
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
+
+}
+
+func (app *application) decodePostForm(r *http.Request, dst any) error {
+	err := r.ParseForm()
+	if err != nil {
+		return err
+	}
+
+	err = app.formDecoder.Decode(dst, r.PostForm)
+	if err != nil {
+		var invalidDecoderError *form.InvalidDecoderError
+
+		if errors.As(err, &invalidDecoderError) {
+			panic(err)
+		}
+
+		return err
+	}
+	return nil
 
 }
