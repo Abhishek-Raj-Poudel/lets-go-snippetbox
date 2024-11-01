@@ -32,7 +32,6 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
-
 	params := httprouter.ParamsFromContext(r.Context())
 
 	id, err := strconv.Atoi(params.ByName("id"))
@@ -53,6 +52,7 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 
 	data := app.newTemplateDate(r)
 	data.Snippet = snippet
+
 	app.render(w, http.StatusOK, "view.tmpl.html", data)
 }
 
@@ -69,26 +69,6 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 // to display error we first created a snippetCreate Type now we will fill it with data I guess
 
 func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
-	// err := r.ParseForm()
-	// if err != nil {
-	// 	app.clientError(w, http.StatusBadRequest)
-	// 	return
-	// }
-
-	// // so we first take the expires value
-	// expires, err := strconv.Atoi(r.PostForm.Get("expires"))
-	// if err != nil {
-	// 	app.clientError(w, http.StatusBadRequest)
-	// 	return
-	// }
-
-	// // then create a form variable which will be a snippetCreate structure
-	// form := snippetCreateForm{
-	// 	Title:   r.PostForm.Get("title"),
-	// 	Content: r.PostForm.Get("content"),
-	// 	Expires: expires,
-	// }
-
 	var form snippetCreateForm
 	err := app.decodePostForm(r, &form)
 	if err != nil {
@@ -118,6 +98,8 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		app.serverError(w, err)
 		return
 	}
+
+app.sessionManager.Put(r.Context(), "flash", "Snippet successfully created!")
 
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 
