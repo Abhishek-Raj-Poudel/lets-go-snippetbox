@@ -104,3 +104,28 @@ app.sessionManager.Put(r.Context(), "flash", "Snippet successfully created!")
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 
 }
+
+
+
+//authentication
+
+func (app *application) useSignup(w http.ResponseWriter,r *http.Request){
+  fmt.Fprintln(w,"Display a HTML form signing up a new user")
+}
+
+func (app *application) useSignupPost(w http.ResponseWriter,r *http.Request){
+  fmt.Fprintln(w,"Display a HTML form signing up a new user")
+}
+
+func (app *application) userLogin(w http.ResponseWriter,r *http.Request){
+  fmt.Fprintln(w,"Display a HTML form for loggin in user")
+}
+
+func (app *application) userLoginPost(w http.ResponseWriter,r *http.Request){
+  fmt.Fprintln(w,"Authenticating and loggin in user")
+}
+
+func (app *application) userLogOutPost(w http.ResponseWriter,r *http.Request){
+  fmt.Fprintln(w,"Loggin out user...")
+}
+
