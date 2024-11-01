@@ -2,10 +2,13 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net/http"
 	"runtime/debug"
 	"time"
+
+	"github.com/go-playground/form/v4"
 )
 
 func (app *application) serverError(w http.ResponseWriter, err error) {
@@ -16,16 +19,13 @@ func (app *application) serverError(w http.ResponseWriter, err error) {
 
 }
 
-
 func (app *application) clientError(w http.ResponseWriter, status int) {
 	http.Error(w, http.StatusText(status), status)
 }
 
-
 func (app *application) notFound(w http.ResponseWriter) {
 	app.clientError(w, http.StatusNotFound)
 }
-
 
 func (app *application) render(w http.ResponseWriter, status int, page string, data *templateData) {
 
@@ -36,23 +36,45 @@ func (app *application) render(w http.ResponseWriter, status int, page string, d
 		return
 	}
 
-  buf := new(bytes.Buffer)
-
+	buf := new(bytes.Buffer)
 
 	err := ts.ExecuteTemplate(buf, "base", data)
 	if err != nil {
 		app.serverError(w, err)
-    return
+		return
 	}
 
 	w.WriteHeader(status)
 
-  buf.WriteTo(w)
+	buf.WriteTo(w)
 
 }
 
 func (app *application) newTemplateDate(r *http.Request) *templateData {
-  return &templateData{
-    CurrentYear: time.Now().Year(),
-  }
-} 
+	return &templateData{
+		CurrentYear: time.Now().Year(),
+	}
+}
+
+func (app *application) decodePostForm(r *http.Request, dst any) error {
+	// Call ParseForm() on the request, as done in the createSnippetPost handler.
+	err := r.ParseForm()
+	if err != nil {
+		return err
+	}
+
+	// Call Decode() on our decoder instance, passing the target destination as the first parameter.
+	err = app.formDecoder.Decode(dst, r.PostForm)
+	if err != nil {
+		// If we use an invalid target destination, Decode() will return an error
+		// with the type *form.InvalidDecoderError. We use errors.As() to check for
+		// this and raise a panic rather than returning the error.
+		var invalidDecoderError *form.InvalidDecoderError
+		if errors.As(err, &invalidDecoderError) {
+			panic(err)
+		}
+		// For all other errors, we return them as normal.
+		return err
+	}
+	return nil
+}
