@@ -41,3 +41,5 @@ test_results.xml
 # Docker-related files (if applicable)
 docker-compose.yml
 Dockerfile
+
+tls/
