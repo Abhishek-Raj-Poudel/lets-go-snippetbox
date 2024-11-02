@@ -16,7 +16,8 @@ func (app *application) routes() http.Handler {
 	fileServer := http.FileServer(http.Dir("./ui/static"))
 	router.Handler(http.MethodGet, "/static/*filepath", http.StripPrefix("/static", fileServer))
 	//Unprotected routes will use the normal dynamic middleware
-	dynamic := alice.New(app.sessionManager.LoadAndSave)
+  // because of our logout form we need to add nosurf function to all of our dynamic chain
+	dynamic := alice.New(app.sessionManager.LoadAndSave,noSurf)
 
 	router.Handler(http.MethodGet, "/", dynamic.ThenFunc(app.home))
 
