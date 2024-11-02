@@ -165,14 +165,73 @@ func (app *application) useSignupPost(w http.ResponseWriter, r *http.Request) {
 
 }
 
+type userLoginForm struct {
+	Email               string `form:"email"`
+	Password            string `form:"password"`
+	validator.Validator `form:"-"`
+}
+
 func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Display a HTML form for loggin in user")
+	data := app.newTemplateDate(r)
+	data.Form = userLoginForm{}
+	app.render(w, http.StatusOK, "login.tmpl.html", data)
 }
 
 func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Authenticating and loggin in user")
+	var form userLoginForm
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	//validation check
+	form.CheckField(validator.NotBlank(form.Email), "email", "This field cannot be blank")
+	form.CheckField(validator.Matches(form.Email, validator.EmailRX), "email", "This field must be a valid email address")
+	form.CheckField(validator.NotBlank(form.Password), "password", "This field cannot be blank")
+
+	if !form.Valid() {
+		data := app.newTemplateDate(r)
+		data.Form = form
+		app.render(w, http.StatusOK, "login.tmpl.html", data)
+		return
+	}
+
+	id, err := app.users.Authenticate(form.Email, form.Password)
+	if err != nil {
+		if errors.Is(err, models.ErrInvalidCredentials) {
+			form.AddNonFieldError("Email or password is incorrect")
+			data := app.newTemplateDate(r)
+			data.Form = form
+			app.render(w, http.StatusUnprocessableEntity, "login.tmpl.html", data)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+
+	//renew token, it's a good practice to do so after every login and logout
+	app.sessionManager.Put(r.Context(), "authenticatedUserID", id)
+
+	//Redirect the user to create snippet page
+	http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)
 }
 
 func (app *application) userLogOutPost(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Loggin out user...")
+
+  // first we will renew the token 
+
+  err := app.sessionManager.RenewToken(r.Context())
+  if err != nil {
+    app.serverError(w,err)
+    return
+  }
+  //remove authenticatedUserID from session
+  app.sessionManager.Remove(r.Context(), "authenticatedUserID")
+
+  // add a toast notification
+app.sessionManager.Put(r.Context(), "flash", "You've been logged out successfully!")
+
+  //go to homepage
+  http.Redirect(w,r,"/",http.StatusSeeOther)
 }
